@@ -1,12 +1,12 @@
 CFG = dict(
-    data_dir  = r"ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3",
+    data_dir  = r"D:\DEPI\ECG project\ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3",
     
     sampling_rate = 500,          # 100 or 500
     target_fs     = 500,          # resample target 
     
-    bandpass_low  = 0.05,          # Hz  — removes baseline wander
-    bandpass_high = 35.0,         # Hz  — removes high-freq noise
-    bandpass_ord  = 4,            # filter order
+    bandpass_low  = 0.5,          # Hz  — removes baseline wander
+    bandpass_high = 40.0,         # Hz  — removes high-freq noise
+    bandpass_ord  = 4,   # filter order
     
     val_fold      = 9,            # strat_fold used as validation
     test_fold     = 10,           # strat_fold used as test (official)
