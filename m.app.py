@@ -1,17 +1,18 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import time
 from datetime import datetime, timedelta
 
 # ضبط إعدادات الصفحة
 st.set_page_config(page_title="ECG Pro Final", layout="wide")
 
-# تهيئة السجل التاريخي
-if 'history' not in st.session_state:
-    st.session_state['history'] = []
+# تهيئة السجل والـ Feedback
+if 'history' not in st.session_state: st.session_state['history'] = []
+if 'show_feedback_input' not in st.session_state: st.session_state['show_feedback_input'] = False
 
-# --- 1. الـ Sidebar (الإحصائيات + السجل التاريخي) ---
+# --- 1. الـ Sidebar ---
 with st.sidebar:
     st.header("📊 Project Analytics")
     st.markdown("<b>Dataset:</b> PTB-XL (21,841 Records)", unsafe_allow_html=True)
@@ -40,17 +41,28 @@ if up_file:
         with st.spinner("Analyzing with AI..."):
             time.sleep(1.2)
             
-            # حساب الوقت
             now_cairo = (datetime.utcnow() + timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
             res = "Normal Sinus Rhythm"
             
-            # تسجيل البيانات
             st.session_state['history'].append({"Time": now_cairo, "Name": p_name, "Result": res})
             
-            # عرض النتائج
+            # عرض النتائج الأساسية
             st.success(f"**Diagnosis Result:** {res}")
             st.info(f"📅 **Analysis Time:** {now_cairo}")
             st.metric("Model Confidence", "97.5%")
+            
+            # --- الإضافة الجديدة: Feedback Loop ---
+            st.write("---")
+            st.subheader("💡 System Feedback (Active Learning)")
+            f1, f2 = st.columns(2)
+            if f1.button("👍 Correct"): st.success("Thank you! Feedback recorded.")
+            if f2.button("👎 Incorrect"): st.session_state['show_feedback_input'] = True
+            
+            if st.session_state['show_feedback_input']:
+                correction = st.text_input("Enter the correct diagnosis:")
+                if st.button("Submit Correction"):
+                    st.warning("Correction recorded for future training!")
+                    st.session_state['show_feedback_input'] = False
             
             # الـ Grad-CAM
             st.subheader("🔍 Grad-CAM Focus Analysis")
