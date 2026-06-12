@@ -5,3 +5,4 @@ torch
 torchvision
 scipy
 scikit-learn
+fpdf2
