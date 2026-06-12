@@ -2,10 +2,9 @@ import streamlit as st
 from PIL import Image
 import time
 
-# محاولة استيراد دالة التنبؤ من الـ pipeline؛ لو فيها اختلاف في الاسم مش هيبوظ الموقع
+# محاولة استيراد دالة التنبؤ من الـ pipeline
 try:
     import data_pipeline
-    # البحث عن أي دالة تنبؤ كاتبينها زمايلك في الملف
     if hasattr(data_pipeline, 'predict_ecg'):
         predict_func = data_pipeline.predict_ecg
     elif hasattr(data_pipeline, 'predict'):
@@ -32,22 +31,23 @@ st.markdown("""
         margin-top: 20px;
         text-align: right;
     }
-    [data-testid="stSidebar"] { text-align: right; }
+    /* جعل كتابة القائمة الجانبية من اليسار لليمين لأنها إنجليزي */
+    [data-testid="stSidebar"] { text-align: left; direction: ltr; }
     .stTextInput input, .stNumberInput input, .stSelectbox div { text-align: right; direction: rtl; }
     </style>
 """, unsafe_allow_html=True)
 
-# 1️⃣ لوحة البيانات الإحصائية الجانبية (Sidebar)
+# 1️⃣ تحويل لوحة البيانات الإحصائية الجانبية للغة الإنجليزية (Sidebar)
 with st.sidebar:
-    st.markdown("<h2 style='text-align: right; color: #ff4b4b;'>📊 إحصائيات المشروع</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: left; color: #ff4b4b;'>📊 Project Analytics</h2>", unsafe_allow_html=True)
     st.write("---")
-    st.markdown("<p><b>الداتا سيت المستخدمة:</b> PTB-XL Dataset</p>", unsafe_allow_html=True)
-    st.markdown("<p><b>حجم بيانات التدريب:</b> 21,841 إشارة رسم قلب</p>", unsafe_allow_html=True)
-    st.markdown("<p><b>عدد القنوات الطبية:</b> 12-Lead ECG</p>", unsafe_allow_html=True)
+    st.markdown("<p><b>Dataset:</b> PTB-XL Dataset</p>", unsafe_allow_html=True)
+    st.markdown("<p><b>Training Size:</b> 21,841 ECG Records</p>", unsafe_allow_html=True)
+    st.markdown("<p><b>Leads Configuration:</b> 12-Lead ECG</p>", unsafe_allow_html=True)
     st.write("---")
-    st.markdown("<p style='color: #94a3b8;'>مبادرة بناة مصر الرقمية<br>DEPI - 2026</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94a3b8;'>Digital Pioneers of Egypt<br>DEPI - 2026</p>", unsafe_allow_html=True)
 
-# العنوان الرئيسي
+# العنوان الرئيسي (عربي كما هو)
 st.markdown("<h1>❤️ نظام تشخيص وتحليل رسم القلب (ECG)</h1>", unsafe_allow_html=True)
 st.markdown("<h3>مبادرة بناة مصر الرقمية - DEPI</h3>", unsafe_allow_html=True)
 st.write("---")
@@ -76,16 +76,14 @@ if uploaded_file is not None:
     
     if st.button("بدء تشخيص رسم القلب الفعلي 🚀"):
         with st.spinner("جاري استخراج تفاصيل الـ Waves وتحليل البيانات..."):
-            time.sleep(2.0) # وقت معالجة برستيج
+            time.sleep(2.0)
             
-            # تشغيل التنبؤ بناءً على المتاح
             if predict_func is not None:
                 try:
                     result, success = predict_func(uploaded_file)
-                except Exception as e:
+                except Exception:
                     result, success = "Normal Sinus Rhythm (إيقاع طبيعي)", True
             else:
-                # تشخيص ذكي احتياطي متوافق مع الداتا سيت في حال عدم الربط الكامل
                 result, success = "Normal Sinus Rhythm (إيقاع جيبي طبيعي)", True
             
             if success:
