@@ -15,7 +15,6 @@ if 'show_feedback_input' not in st.session_state: st.session_state['show_feedbac
 # --- 1. الـ Sidebar ---
 with st.sidebar:
     st.header("📊 Analytics")
-    # إضافة ميزة (3): تبديل اللغة (بسيط)
     lang = st.radio("Language:", ["English", "العربية"])
     st.write("---")
     st.markdown("<b>Dataset:</b> PTB-XL (21,841 Records)", unsafe_allow_html=True)
@@ -24,18 +23,16 @@ with st.sidebar:
     st.subheader("🕒 Recent History")
     if st.session_state['history']:
         df_history = pd.DataFrame(st.session_state['history'])
-        st.table(df_history[['Time', 'PatientID', 'Result']])
+        st.table(df_history)
 
 # --- 2. الواجهة الرئيسية ---
 st.title("⚡ ECG Diagnostic System")
 
-# إضافة ميزة (1): رقم الملف الطبي
 col1, col2, col3 = st.columns(3)
 with col1: p_id = st.text_input("Patient Medical ID:", "MRN-001")
 with col2: p_name = st.text_input("Patient Name:", "Mohamed")
 with col3: p_gen = st.selectbox("Gender:", ["Male", "Female"])
 
-# إضافة ميزة (4): الفحص الجماعي (رفع ملفات)
 up_files = st.file_uploader("Upload ECG Image(s)", type=['jpg', 'png'], accept_multiple_files=True)
 
 if up_files:
@@ -51,12 +48,8 @@ if up_files:
             
             st.session_state['history'].append({"Time": now_cairo, "PatientID": p_id, "Result": res})
             
-            # عرض النتائج
             st.success(f"**Diagnosis Result:** {res}")
-            
-            # إضافة ميزة (2): مقارنة تقرير (مبسطة)
             st.info("📊 Comparison: Status stable compared to previous record.")
-            
             st.metric("Confidence Score", "97.5%")
             
             st.subheader("🔍 Focus Analysis")
@@ -73,7 +66,6 @@ if up_files:
                 if st.button("🔔 Emergency Alert"):
                     st.error("🚨 ALERT: Emergency team notified!")
             
-            # التقييم في الأسفل تماماً
             st.write("---")
             st.subheader("💡 Was this result correct?")
             f1, f2 = st.columns(2)
