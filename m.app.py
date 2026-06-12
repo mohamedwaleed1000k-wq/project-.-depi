@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 import time
 from datetime import datetime, timedelta
 
-# ضبط الصفحة
+# ضبط إعدادات الصفحة
 st.set_page_config(page_title="ECG Pro Final", layout="wide")
 
+# تهيئة الـ Session State للحفاظ على التاريخ
 if 'history' not in st.session_state:
     st.session_state['history'] = []
 
-# --- 1. الـ Sidebar (الإحصائيات + التاريخ) ---
+# --- 1. الـ Sidebar (الإحصائيات + السجل التاريخي) ---
 with st.sidebar:
     st.header("📊 Project Analytics")
-    # إحصائيات المشروع
     st.markdown("<b>Dataset:</b> PTB-XL (21,841 Records)", unsafe_allow_html=True)
     st.markdown("<b>Model:</b> Deep CNN", unsafe_allow_html=True)
     st.markdown("<b>Overall Accuracy:</b> 98.2%", unsafe_allow_html=True)
@@ -41,14 +41,16 @@ if up_file:
         with st.spinner("Analyzing with AI..."):
             time.sleep(1.2)
             
-            # تسجيل البيانات
-            now_cairo = (datetime.utcnow() + timedelta(hours=3)).strftime("%H:%M:%S")
+            # حساب التوقيت (بتوقيت القاهرة)
+            now_cairo = (datetime.utcnow() + timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
             res = "Normal Sinus Rhythm"
             
+            # إضافة البيانات للسجل
             st.session_state['history'].append({"Time": now_cairo, "Name": p_name, "Result": res})
             
-            # النتائج
+            # عرض النتيجة والوقت
             st.success(f"**Diagnosis Result:** {res}")
+            st.info(f"📅 **Analysis Time:** {now_cairo}")
             st.metric("Model Confidence", "97.5%")
             
             # الـ Grad-CAM
@@ -61,7 +63,7 @@ if up_file:
             # أزرار الخدمة
             c_btn1, c_btn2 = st.columns(2)
             with c_btn1:
-                report_data = f"ECG Report\nName: {p_name}\nTime: {now_cairo}\nResult: {res}"
+                report_data = f"ECG Medical Report\nPatient: {p_name}\nTime: {now_cairo}\nResult: {res}"
                 st.download_button("📥 Download Report (.txt)", report_data, file_name="Report.txt")
             with c_btn2:
                 if st.button("🔔 Emergency Alert"):
