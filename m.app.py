@@ -8,21 +8,15 @@ from datetime import datetime, timedelta
 # ضبط الصفحة
 st.set_page_config(page_title="ECG Pro Final", layout="wide")
 
-# تهيئة الـ Session State
 if 'history' not in st.session_state:
     st.session_state['history'] = []
 
-# --- 1. الـ Sidebar (كل البيانات) ---
+# --- 1. الـ Sidebar (بدون ساعة، الجدول فقط) ---
 with st.sidebar:
     st.header("📊 Project Analytics")
-    # التوقيت المحلي للقاهرة
-    cairo_time = (datetime.utcnow() + timedelta(hours=3)).strftime("%H:%M:%S")
-    st.metric("Cairo Time (EET)", cairo_time)
-    st.write(f"Date: {(datetime.utcnow() + timedelta(hours=3)).strftime('%Y-%m-%d')}")
     st.write("---")
     st.subheader("🕒 Recent History")
     if st.session_state['history']:
-        # عرض الجدول
         df_history = pd.DataFrame(st.session_state['history'])
         st.table(df_history[['Time', 'Name', 'Result']])
 
@@ -63,7 +57,6 @@ if up_file:
             # أزرار الخدمة
             c_btn1, c_btn2 = st.columns(2)
             with c_btn1:
-                # تحميل تقرير نصي آمن
                 report_data = f"ECG Report\nName: {p_name}\nTime: {now_cairo}\nResult: {res}"
                 st.download_button("📥 Download Report (.txt)", report_data, file_name="Report.txt")
             with c_btn2:
