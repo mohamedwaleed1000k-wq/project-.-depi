@@ -1,25 +1,64 @@
 import streamlit as st
-import pandas as pd
+from PIL import Image
 
-# إعدادات شكل الصفحة
-st.set_page_config(page_title="مشروع تخرج DEPI", page_icon="🧠", layout="centered")
+# إعدادات الصفحة الأساسية
+st.set_page_config(
+    page_title="ECG Diagnostic Classification",
+    page_icon="❤️",
+    layout="centered"
+)
 
-# عنوان الموقع
-st.title("🧠 نظام تحليل إشارات الدماغ EEG")
-st.subheader("مبادرة بناة مصر الرقمية - DEPI")
-st.markdown("---")
+# تصميم مخصص متناسق مع الخلفية الداكنة
+st.markdown("""
+    <style>
+    .main {
+        background-color: #0e1117;
+    }
+    h1 {
+        color: #ff4b4b;
+        text-align: center;
+        font-family: 'Cairo', sans-serif;
+        margin-bottom: 5px;
+    }
+    h3 {
+        color: #ffffff;
+        text-align: center;
+        font-family: 'Cairo', sans-serif;
+        font-weight: normal;
+    }
+    p {
+        font-family: 'Cairo', sans-serif;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-st.write("مرحباً بك! يرجى رفع ملف البيانات الوصفية (Metadata) لبدء التحليل.")
+# العنوان الجديد المتوافق مع مشروع الـ ECG
+st.markdown("<h1>❤️ نظام تشخيص وتحليل رسم القلب (ECG)</h1>", unsafe_allow_html=True)
+st.markdown("<h3>مبادرة بناة مصر الرقمية - DEPI</h3>", unsafe_allow_html=True)
+st.write("---")
 
-# زرار لرفع الملفات
-uploaded_file = st.file_uploader("اختر ملف CSV", type=["csv"])
+# توجيهات للمستخدم
+st.markdown("<p style='text-align: right; color: #cbd5e1; font-size: 18px;'>مرحباً بك! لبدء الفحص والتشخيص، يرجى رفع صورة تخطيط رسم القلب (ECG Strip).</p>", unsafe_allow_html=True)
 
+# أداة رفع الملفات مصممة للصور فقط (PNG, JPG, JPEG)
+uploaded_file = st.file_uploader(
+    "اختر صورة رسم القلب", 
+    type=["jpg", "jpeg", "png"],
+    help="ارفع صورة واضحة لتخطيط القلب ليقوم النموذج بتحليلها"
+)
+
+# إذا قام المستخدم برفع صورة
 if uploaded_file is not None:
-    st.success("✅ تم رفع الملف بنجاح!")
+    st.write("---")
+    # عرض الصورة في الواجهة للتأكيد
+    image = Image.open(uploaded_file)
+    st.image(image, caption="صورة رسم القلب المرفوعة", use_container_width=True)
     
-    df = pd.read_csv(uploaded_file)
-    st.write("📋 **معاينة البيانات المرفوعة:**")
-    st.dataframe(df.head(5))
+    # تنسيق رسالة النجاح في جهة اليمين
+    st.markdown("<div style='text-align: right; color: #10b981; font-size: 16px; font-weight: bold; margin-bottom: 15px;'>✅ تم رفع الصورة بنجاح وتجهيزها للتحليل</div>", unsafe_allow_html=True)
     
-    if st.button("🚀 بدء التحليل والتنبؤ"):
-        st.info("جاري تشغيل الـ Pipeline وفحص البيانات... (سيتم ربط الموديل الفعلي في الخطوة القادمة)")
+    # زر بدء التشخيص والموديل
+    if st.button("بدء تشخيص رسم القلب 🚀"):
+        with st.spinner("جاري معالجة الصورة واستخراج الإشارات الرقمية..."):
+            # هنا سيتم لاحقاً استدعاء الموديل الخاص بكم من دالة في data_pipeline.py
+            st.info("💡 سيتم ربط الموديل الفعلي لعرض نتائج التشخيص وتصنيف الحالات بناءً على نموذج PTB-XL قريباً!")
