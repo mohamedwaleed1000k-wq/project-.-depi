@@ -3,23 +3,19 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from datetime import datetime
-import pytz # مكتبة التوقيت
+from datetime import datetime, timedelta
 
-st.set_page_config(page_title="ECG Pro Cairo", layout="wide")
-
-# إعداد توقيت القاهرة
-cairo_tz = pytz.timezone("Africa/Cairo")
+# إعدادات الصفحة
+st.set_page_config(page_title="ECG Pro Final", layout="wide")
 
 if 'history' not in st.session_state: st.session_state['history'] = []
 
-# --- Sidebar (ساعة مصر) ---
+# --- Sidebar ---
 with st.sidebar:
     st.header("📊 Project Analytics")
-    # جلب توقيت القاهرة
-    cairo_time = datetime.now(cairo_tz).strftime("%H:%M:%S")
-    st.metric("Egypt Time (Cairo)", cairo_time)
-    st.write(f"Date: {datetime.now(cairo_tz).strftime('%Y-%m-%d')}")
+    # توقيت القاهرة (يدوياً بدون مكتبات خارجية)
+    cairo_time = (datetime.utcnow() + timedelta(hours=3)).strftime("%H:%M:%S")
+    st.metric("Cairo Time (EET)", cairo_time)
     st.write("---")
     st.subheader("🕒 Recent History")
     if st.session_state['history']:
@@ -39,8 +35,8 @@ if up:
     if st.button("🚀 Analyze"):
         with st.spinner("Processing..."):
             time.sleep(1)
-            # النتيجة بتوقيت القاهرة
-            now_cairo = datetime.now(cairo_tz).strftime("%H:%M:%S")
+            # التوقيت النهائي
+            now_cairo = (datetime.utcnow() + timedelta(hours=3)).strftime("%H:%M:%S")
             res = "Normal Sinus Rhythm"
             st.session_state['history'].append({"Time": now_cairo, "Name": p_name, "Result": res})
             
@@ -52,10 +48,9 @@ if up:
             ax.axis('off')
             st.pyplot(fig)
             
-            # أزرار الخدمة
             col1, col2 = st.columns(2)
             with col1:
-                st.download_button("📥 Report", f"Patient: {p_name}\nResult: {res}\nTime: {now_cairo}", "Report.txt")
+                st.download_button("📥 Download Report", f"Patient: {p_name}\nTime: {now_cairo}\nResult: {res}", "Report.txt")
             with col2:
                 if st.button("🔔 Emergency Alert"):
                     st.error("🚨 ALERT SENT!")
