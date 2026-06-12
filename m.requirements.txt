@@ -1,7 +1,10 @@
 streamlit
 pandas
 Pillow
+fpdf2
+matplotlib
+numpy
 torch
 torchvision
 scipy
-fpdf2
+scikit-learn
