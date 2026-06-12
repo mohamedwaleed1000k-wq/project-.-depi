@@ -24,22 +24,6 @@ st.markdown("""
     h1 { color: #ff4b4b; text-align: center; font-family: 'Cairo', sans-serif; }
     h3 { color: #ffffff; text-align: center; font-family: 'Cairo', sans-serif; font-weight: normal; }
     p, div, label { font-family: 'Cairo', sans-serif; }
-    .result-box {
-        background-color: #1e293b;
-        padding: 25px;
-        border-radius: 12px;
-        margin-top: 20px;
-        text-align: right;
-    }
-    .alert-banner {
-        padding: 12px;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        text-align: center;
-        margin-top: 15px;
-        font-size: 16px;
-    }
     [data-testid="stSidebar"] { text-align: left; direction: ltr; }
     .stTextInput input, .stNumberInput input, .stSelectbox div { text-align: right; direction: rtl; }
     </style>
@@ -93,19 +77,18 @@ if uploaded_file is not None:
                 except Exception:
                     result, success = "Normal Sinus Rhythm (إيقاع طبيعي)", True
             else:
-                # محاكاة ذكية تتغير عشوائياً بين حالتين لإثبات التنبيهات الديناميكية
                 import random
                 options = ["Normal Sinus Rhythm (إيقاع طبيعي)", "Myocardial Infarction (احتشاء عضلة القلب / جلطة)"]
                 result, success = random.choice(options), True
             
-            # تحديد الألوان والتوصيات بناءً على النتيجة المكتشفة
+            # تحديد الألوان والتوصيات
             if "Normal" in result or "طبيعي" in result:
-                alert_color = "#10b981" # أخضر
+                alert_color = "#10b981"
                 alert_text = "🟢 حالة مستقرة: المؤشرات الحيوية تقع في النطاق الطبيعي الإيقاعي."
                 recommendation = "✅ يُنصح بالمتابعة الدورية الروتينية فقط ولا توجد علامات قلق حادة."
                 box_border = "#10b981"
             else:
-                alert_color = "#ef4444" # أحمر
+                alert_color = "#ef4444"
                 alert_text = "🚨 تنبيه حالة حرجة: تم رصد تغيرات حادة في إشارة رسم القلب!"
                 recommendation = "⚠️ إجراء طبي فوري: يرجى عمل فحص إنزيمات قلب (Troponin) فوراً وعرض المريض على طبيب الحالات الحرجة."
                 box_border = "#ef4444"
@@ -113,9 +96,10 @@ if uploaded_file is not None:
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
             if success:
+                # عرض التقرير بالكامل داخل ممرر HTML آمن ومظبوط التنسيق
                 st.markdown(f"""
-                    <div class="result-box" style="border-right: 6px solid {box_border};">
-                        <h3 style="color: {box_border}; margin-top:0; text-align: right;">📊 التقرير الطبي الذكي المتكامل</h3>
+                    <div style="background-color: #1e293b; padding: 25px; border-radius: 12px; margin-top: 20px; text-align: right; border-right: 6px solid {box_border};">
+                        <h3 style="color: {box_border}; margin-top:0; text-align: right; font-weight: bold;">📊 التقرير الطبي الذكي المتكامل</h3>
                         <p style="color: #94a3b8; font-size: 13px; text-align: right;">⏱️ <b>تاريخ ووقت الفحص:</b> {current_time}</p>
                         <hr style="border-color: #334155;">
                         <p style="color: #ffffff; text-align: right;"><b>اسم المريض:</b> {patient_name if patient_name else 'غير مسجل'}</p>
@@ -123,11 +107,11 @@ if uploaded_file is not None:
                         <hr style="border-color: #334155;">
                         <p style="color: #ffffff; text-align: right; font-size: 19px;"><b>التشخيص المكتشف:</b> <span style="color: {box_border}; font-weight: bold;">{result}</span></p>
                         
-                        <div class="alert-banner" style="background-color: {alert_color};">
+                        <div style="padding: 12px; border-radius: 8px; color: white; font-weight: bold; text-align: center; margin-top: 15px; font-size: 16px; background-color: {alert_color};">
                             {alert_text}
                         </div>
                         
                         <p style="color: #cbd5e1; font-size: 15px; margin-top: 15px; text-align: right;"><b>🩺 التوصية الطبية المقترحة:</b></p>
-                        <p style="color: #94a3b8; font-size: 14px; text-align: right; background-color: #0f172a; padding: 10px; border-radius: 6px;">{recommendation}</p>
+                        <p style="color: #cbd5e1; font-size: 14px; text-align: right; background-color: #0f172a; padding: 12px; border-radius: 6px; border: 1px solid #334155;">{recommendation}</p>
                     </div>
                 """, unsafe_allow_html=True)
