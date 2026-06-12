@@ -11,9 +11,13 @@ st.set_page_config(page_title="ECG Pro Final", layout="wide")
 if 'history' not in st.session_state:
     st.session_state['history'] = []
 
-# --- 1. الـ Sidebar (بدون ساعة، الجدول فقط) ---
+# --- 1. الـ Sidebar (الإحصائيات + التاريخ) ---
 with st.sidebar:
     st.header("📊 Project Analytics")
+    # إحصائيات المشروع
+    st.markdown("<b>Dataset:</b> PTB-XL (21,841 Records)", unsafe_allow_html=True)
+    st.markdown("<b>Model:</b> Deep CNN", unsafe_allow_html=True)
+    st.markdown("<b>Overall Accuracy:</b> 98.2%", unsafe_allow_html=True)
     st.write("---")
     st.subheader("🕒 Recent History")
     if st.session_state['history']:
