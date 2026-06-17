@@ -8,3 +8,5 @@ torch
 torchvision
 scipy
 scikit-learn
+wfdb
+tensorflow
