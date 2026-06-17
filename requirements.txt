@@ -9,3 +9,4 @@ fpdf2
 torch
 torchvision
 scipy
+requests
