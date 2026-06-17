@@ -1,12 +1,7 @@
 streamlit
 pandas
-Pillow
-fpdf2
-matplotlib
 numpy
-torch
-torchvision
-scipy
-scikit-learn
-wfdb
+matplotlib
 tensorflow
+wfdb
+scikit-learn
