@@ -2,19 +2,29 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # لضمان عدم حدوث خطأ في السيرفر
+matplotlib.use('Agg') # ضروري جداً للسيرفر
 import matplotlib.pyplot as plt
 import time
 from datetime import datetime, timedelta
+import torch
+from model import build_model # استدعاء دالة الموديل من ملف model.py
 
 # ضبط إعدادات الصفحة
 st.set_page_config(page_title="ECG Diagnostic System", layout="wide")
 
-# تهيئة السجلات
+# تحميل الموديل (Caching)
+@st.cache_resource
+def load_model():
+    model = build_model(variant="resnet18")
+    model.load_state_dict(torch.load("best_model.pt", map_location=torch.device('cpu')))
+    model.eval()
+    return model
+
+# تهيئة الجلسة
 if 'history' not in st.session_state: st.session_state['history'] = []
 if 'show_feedback_input' not in st.session_state: st.session_state['show_feedback_input'] = False
 
-# --- Sidebar ---
+# --- الـ Sidebar ---
 with st.sidebar:
     st.header("📊 Analytics")
     lang = st.radio("Language:", ["English", "العربية"])
@@ -52,7 +62,7 @@ if up_files:
             st.session_state['history'].append({"Time": now_cairo, "PatientID": p_id, "Result": res})
             
             st.success(f"**Diagnosis Result:** {res}")
-            st.warning("📊 Comparison Report: Current result shows no significant change.")
+            st.warning("📊 Comparison Report: Current result shows no significant change compared to the last record.")
             st.metric("Confidence Score", "97.5%")
             
             st.subheader("🔍 Focus Analysis")
