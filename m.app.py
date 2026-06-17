@@ -1,36 +1,28 @@
 import streamlit as st
 import torch
 import os
-from model import ResNet1D  # تأكد أن ملف model.py موجود في نفس المجلد
 
+# تعريف الموديل من الملف المجاور
+from model import ResNet1D
+
+st.set_page_config(page_title="ECG Analysis", layout="centered")
+st.title("تحليل رسم القلب (ECG)")
+
+# دالة لتحميل الموديل لما توفر ملف الأوزان الجديد
 @st.cache_resource
-def load_my_model():
-    # 1. التأكد من وجود الملف قبل المحاولة
-    if not os.path.exists('best_model.pt'):
-        st.error("❌ خطأ: ملف 'best_model.pt' غير موجود في المجلد الرئيسي.")
-        st.stop()
-    
-    # 2. تحميل الموديل
+def load_model():
+    model_path = 'model_weights.pt' # سمي ملفك الجديد بهذا الاسم
+    if not os.path.exists(model_path):
+        return None
+        
     model = ResNet1D(n_leads=12, n_classes=5)
-    
-    # استخدام weights_only=False لتجنب UnpicklingError
-    checkpoint = torch.load('best_model.pt', map_location=torch.device('cpu'), weights_only=False)
-    
-    # تنظيف الأسماء (إزالة 'module.' إذا كانت موجودة)
-    if isinstance(checkpoint, dict):
-        state_dict = checkpoint.get('model_state', checkpoint.get('state_dict', checkpoint))
-    else:
-        state_dict = checkpoint
-    
-    new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
-    
-    model.load_state_dict(new_state_dict)
+    model.load_state_dict(torch.load(model_path, map_location='cpu'))
     model.eval()
     return model
 
-st.title("تحليل رسم القلب (ECG)")
+model = load_model()
 
-# تشغيل التحميل
-model = load_my_model()
 if model:
-    st.success("✅ تم تحميل الموديل بنجاح!")
+    st.success("✅ الموديل جاهز للعمل!")
+else:
+    st.warning("⚠️ بانتظار رفع ملف الموديل (model_weights.pt).")
