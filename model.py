@@ -3,20 +3,45 @@ import torch
 import os
 import sys
 
-# 1. إعداد المسارات عشان بايثون يشوف ملف model.py
+# التأكد من أن المجلد الحالي موجود في مسار بايثون
 sys.path.append(os.getcwd())
-from model import ResNet1D 
 
-# 2. إعداد صفحة الموقع
-st.set_page_config(page_title="ECG Analysis", layout="centered")
-st.title("تحليل رسم القلب (ECG)")
+# استيراد كلاس الموديل من ملف model.py
+try:
+    from model import ResNet1D
+except ImportError as e:
+    st.error(f"خطأ في استيراد الموديل: {e}")
+    st.stop()
 
-# 3. دالة تحميل الموديل الذكية
+# إعداد الموديل
 @st.cache_resource
-def load_my_model():
-    # تعريف هيكل الموديل
+def load_model():
     model = ResNet1D(n_leads=12, n_classes=5)
     
-    # التأكد من وجود ملف الأوزان
-    model_path = 'best_model.pt'
-    if not os.path.exists
+    # تحميل الأوزان - تأكد من وجود الملف best_model.pt في نفس المجلد
+    if not os.path.exists('best_model.pt'):
+        st.error("ملف best_model.pt غير موجود في المجلد!")
+        return None
+        
+    checkpoint = torch.load('best_model.pt', map_location=torch.device('cpu'), weights_only=False)
+    
+    # معالجة الأوزان (سواء كانت داخل قاموس أو مباشرة)
+    if isinstance(checkpoint, dict):
+        state_dict = checkpoint.get('model_state', checkpoint.get('state_dict', checkpoint))
+    else:
+        state_dict = checkpoint
+        
+    # تنظيف الأسماء (إزالة 'module.' إذا كانت موجودة)
+    new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+    
+    model.load_state_dict(new_state_dict)
+    model.eval()
+    return model
+
+st.title("تحليل رسم القلب (ECG)")
+
+# تحميل وتشغيل الموديل
+model = load_model()
+
+if model:
+    st.success("✅ تم تحميل الموديل بنجاح!")
