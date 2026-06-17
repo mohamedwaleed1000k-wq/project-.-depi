@@ -5,3 +5,8 @@ matplotlib
 tensorflow
 wfdb
 scikit-learn
+Pillow
+fpdf2
+torch
+torchvision
+scipy
