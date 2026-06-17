@@ -1,47 +1,42 @@
-import streamlit as st
 import torch
-import os
-import sys
+import torch.nn as nn
 
-# التأكد من أن المجلد الحالي موجود في مسار بايثون
-sys.path.append(os.getcwd())
+class ResBlock1D(nn.Module):
+    def __init__(self, in_ch, out_ch, kernel_size=7, stride=1, dropout=0.2):
+        super().__init__()
+        pad = kernel_size // 2
+        self.bn1 = nn.BatchNorm1d(in_ch)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv1d(in_ch, out_ch, kernel_size=kernel_size, stride=stride, padding=pad, bias=False)
+        self.bn2 = nn.BatchNorm1d(out_ch)
+        self.conv2 = nn.Conv1d(out_ch, out_ch, kernel_size=kernel_size, stride=1, padding=pad, bias=False)
+        self.drop = nn.Dropout(p=dropout)
+        self.skip = nn.Sequential()
+        if stride != 1 or in_ch != out_ch:
+            self.skip = nn.Sequential(nn.Conv1d(in_ch, out_ch, kernel_size=1, stride=stride, bias=False), nn.BatchNorm1d(out_ch))
+            
+    def forward(self, x):
+        identity = self.skip(x)
+        out = self.bn1(x); out = self.relu(out); out = self.conv1(out)
+        out = self.bn2(out); out = self.relu(out); out = self.drop(out); out = self.conv2(out)
+        return out + identity
 
-# استيراد كلاس الموديل من ملف model.py
-try:
-    from model import ResNet1D
-except ImportError as e:
-    st.error(f"خطأ في استيراد الموديل: {e}")
-    st.stop()
-
-# إعداد الموديل
-@st.cache_resource
-def load_model():
-    model = ResNet1D(n_leads=12, n_classes=5)
-    
-    # تحميل الأوزان - تأكد من وجود الملف best_model.pt في نفس المجلد
-    if not os.path.exists('best_model.pt'):
-        st.error("ملف best_model.pt غير موجود في المجلد!")
-        return None
+class ResNet1D(nn.Module):
+    def __init__(self, n_leads=12, n_classes=5, base_ch=64, layers=[2,2,2,2], kernel_size=7, dropout=0.2):
+        super().__init__()
+        self.stem = nn.Sequential(nn.Conv1d(n_leads, base_ch, kernel_size=15, stride=2, padding=7, bias=False), nn.BatchNorm1d(base_ch), nn.ReLU(inplace=True), nn.MaxPool1d(kernel_size=3, stride=2, padding=1))
+        ch = base_ch
+        self.stage1 = self._make_stage(ch, ch, layers[0], 1, kernel_size, dropout)
+        self.stage2 = self._make_stage(ch, ch*2, layers[1], 2, kernel_size, dropout)
+        self.stage3 = self._make_stage(ch*2, ch*4, layers[2], 2, kernel_size, dropout)
+        self.stage4 = self._make_stage(ch*4, ch*8, layers[3], 2, kernel_size, dropout)
+        self.head = nn.Sequential(nn.AdaptiveAvgPool1d(1), nn.Flatten(), nn.Dropout(p=dropout), nn.Linear(ch*8, n_classes))
         
-    checkpoint = torch.load('best_model.pt', map_location=torch.device('cpu'), weights_only=False)
-    
-    # معالجة الأوزان (سواء كانت داخل قاموس أو مباشرة)
-    if isinstance(checkpoint, dict):
-        state_dict = checkpoint.get('model_state', checkpoint.get('state_dict', checkpoint))
-    else:
-        state_dict = checkpoint
+    def _make_stage(self, in_ch, out_ch, n_blocks, stride, ks, dp):
+        blocks = [ResBlock1D(in_ch, out_ch, ks, stride, dp)]
+        for _ in range(1, n_blocks): blocks.append(ResBlock1D(out_ch, out_ch, ks, 1, dp))
+        return nn.Sequential(*blocks)
         
-    # تنظيف الأسماء (إزالة 'module.' إذا كانت موجودة)
-    new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
-    
-    model.load_state_dict(new_state_dict)
-    model.eval()
-    return model
-
-st.title("تحليل رسم القلب (ECG)")
-
-# تحميل وتشغيل الموديل
-model = load_model()
-
-if model:
-    st.success("✅ تم تحميل الموديل بنجاح!")
+    def forward(self, x):
+        x = self.stem(x); x = self.stage1(x); x = self.stage2(x); x = self.stage3(x); x = self.stage4(x)
+        return self.head(x)
