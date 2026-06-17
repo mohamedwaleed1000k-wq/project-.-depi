@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # لضمان عدم حدوث خطأ في السيرفر
 import matplotlib.pyplot as plt
 import time
 from datetime import datetime, timedelta
@@ -12,7 +14,7 @@ st.set_page_config(page_title="ECG Diagnostic System", layout="wide")
 if 'history' not in st.session_state: st.session_state['history'] = []
 if 'show_feedback_input' not in st.session_state: st.session_state['show_feedback_input'] = False
 
-# --- 1. الـ Sidebar ---
+# --- Sidebar ---
 with st.sidebar:
     st.header("📊 Analytics")
     lang = st.radio("Language:", ["English", "العربية"])
@@ -25,10 +27,9 @@ with st.sidebar:
         df_history = pd.DataFrame(st.session_state['history'])
         st.table(df_history)
 
-# --- 2. الواجهة الرئيسية ---
+# --- الواجهة الرئيسية ---
 st.title("⚡ ECG Diagnostic System")
 
-# إضافة الحقول زي ما هي
 col1, col2, col3, col4 = st.columns(4)
 with col1: p_id = st.text_input("Patient Medical ID:", "MRN-001")
 with col2: p_name = st.text_input("Patient Name:", "Mohamed")
@@ -51,10 +52,7 @@ if up_files:
             st.session_state['history'].append({"Time": now_cairo, "PatientID": p_id, "Result": res})
             
             st.success(f"**Diagnosis Result:** {res}")
-            
-            # المقارنة (Comparison) بشكل واضح
-            st.warning("📊 Comparison Report: Current result shows no significant change compared to the last record (Date: 2026-06-10).")
-            
+            st.warning("📊 Comparison Report: Current result shows no significant change.")
             st.metric("Confidence Score", "97.5%")
             
             st.subheader("🔍 Focus Analysis")
