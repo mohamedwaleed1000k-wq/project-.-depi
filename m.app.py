@@ -1,30 +1,49 @@
+import streamlit as st
 import torch
-from model import ResNet1D
+import os
+import sys
 
-# 1. تعريف الموديل
-model = ResNet1D(n_leads=12, n_classes=5)
+# 1. إعداد المسارات عشان بايثون يشوف ملف model.py
+sys.path.append(os.getcwd())
+from model import ResNet1D 
 
-# 2. تحميل آمن للموديل
-try:
-    # نحمل الملف ونفحص إذا كان يحتوي على أوزان مباشرة أو "Checkpoint"
-    checkpoint = torch.load('best_model.pt', map_location=torch.device('cpu'), weights_only=False)
+# 2. إعداد صفحة الموقع
+st.set_page_config(page_title="ECG Analysis", layout="centered")
+st.title("تحليل رسم القلب (ECG)")
+
+# 3. دالة تحميل الموديل (Cache عشان الموقع يفتح بسرعة)
+@st.cache_resource
+def load_my_model():
+    # تعريف هيكل الموديل
+    model = ResNet1D(n_leads=12, n_classes=5)
     
-    # إذا كان الملف يحتوي على 'model_state' أو 'state_dict' (الشائع في التدريب)
+    # التأكد من وجود ملف الأوزان
+    model_path = 'best_model.pt'
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"ملف {model_path} مش موجود في نفس المجلد!")
+
+    # تحميل الأوزان
+    checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+    
+    # استخراج الـ state_dict بذكاء
     if isinstance(checkpoint, dict):
-        if 'model_state' in checkpoint:
-            state_dict = checkpoint['model_state']
-        elif 'state_dict' in checkpoint:
-            state_dict = checkpoint['state_dict']
-        else:
-            state_dict = checkpoint
+        state_dict = checkpoint.get('model_state', checkpoint.get('state_dict', checkpoint))
     else:
         state_dict = checkpoint
-
-    # تنظيف أسماء الأوزان (إزالة 'module.' إذا كانت موجودة)
+        
+    # تنظيف الأسماء (إزالة 'module.' لو موجودة)
     new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
     
+    # تحميل الأوزان في الموديل
     model.load_state_dict(new_state_dict)
     model.eval()
-    print("✅ الموديل يعمل بنجاح في Colab!")
+    return model
+
+# 4. تشغيل الموديل
+try:
+    with st.spinner("جاري تحميل الموديل..."):
+        model = load_my_model()
+    st.success("✅ الموديل اشتغل وزي الفل!")
 except Exception as e:
-    print(f"❌ حدث خطأ أثناء التحميل: {e}")
+    st.error(f"❌ الموديل فيه مشكلة: {e}")
+    st.write("تأكد إن ملف 'best_model.pt' و 'model.py' موجودين في نفس مجلد 'm.app.py'")
