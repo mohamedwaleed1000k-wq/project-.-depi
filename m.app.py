@@ -1,72 +1,33 @@
 import streamlit as st
-import os
-import tempfile
-import shutil
-import numpy as np
 import torch
-import wfdb
-import matplotlib.pyplot as plt
+import os
 
-# استيراد من ملفاتك (تأكد من وجود model.py و data_pipeline.py)
-from model import build_model
-import data_pipeline as dp
+# تعريف الموديل من الملف المجاور
+from model import ResNet1D
 
-st.set_page_config(page_title="ECG Diagnosis", page_icon="❤️", layout="wide")
-st.title("❤️ ECG Diagnosis using Deep Learning")
+st.set_page_config(page_title="ECG Analysis", layout="centered")
+st.title("تحليل رسم القلب (ECG)")
 
+# دالة لتحميل الموديل من المجلد المطلوب
 @st.cache_resource
 def load_model():
-    checkpoint_path = "checkpoints/best_model.pt"
-    if not os.path.exists(checkpoint_path):
-        return None, None, "ملف النموذج غير موجود"
+    # المسار المطلوب: checkpoints/best_model.pt
+    model_path = os.path.join('checkpoints', 'best_model.pt')
     
-    try:
-        # تحميل النموذج
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
-        model = build_model(n_classes=len(checkpoint["class_names"]))
-        model.load_state_dict(checkpoint["model_state"])
-        model.eval()
-        return model, checkpoint["class_names"], None
-    except Exception as e:
-        return None, None, str(e)
-
-model, class_names, error = load_model()
-
-if error:
-    st.error(f"فشل تحميل النموذج: {error}")
-    st.stop()
-
-st.success("✅ Model Loaded Successfully")
-
-uploaded_files = st.file_uploader("Upload ECG Files (.hea + .dat)", type=["hea", "dat"], accept_multiple_files=True)
-
-if uploaded_files:
-    temp_dir = tempfile.mkdtemp()
-    for file in uploaded_files:
-        with open(os.path.join(temp_dir, file.name), "wb") as f:
-            f.write(file.getbuffer())
-
-    hea_file = next((f.name for f in uploaded_files if f.name.endswith(".hea")), None)
+    if not os.path.exists(model_path):
+        return None
+        
+    model = ResNet1D(n_leads=12, n_classes=5)
     
-    if hea_file:
-        try:
-            record_path = os.path.join(temp_dir, os.path.splitext(hea_file)[0])
-            sig, fields = wfdb.rdsamp(record_path)
-            
-            sig = dp.clean_single_signal(sig)
-            sig = dp.bandpass_filter_single(sig)
-            sig = dp.normalize_single_signal(sig)
-            
-            x = torch.tensor(np.transpose(sig, (1, 0)), dtype=torch.float32).unsqueeze(0)
-            
-            with torch.no_grad():
-                probs = torch.sigmoid(model(x))[0].numpy()
-            
-            pred = np.argmax(probs)
-            st.write(f"### النتيجة: {class_names[pred]}")
-            for c, p in zip(class_names, probs):
-                st.write(f"{c}: {p*100:.2f}%")
-                st.progress(float(p))
-        except Exception as e:
-            st.error(f"خطأ: {e}")
-    shutil.rmtree(temp_dir)
+    # تحميل الأوزان
+    # استخدام weights_only=False هو الخيار الأفضل لتفادي مشاكل الإصدارات الجديدة
+    model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=False))
+    model.eval()
+    return model
+
+model = load_model()
+
+if model:
+    st.success("✅ الموديل جاهز للعمل!")
+else:
+    st.warning("⚠️ بانتظار رفع ملف الموديل في المسار: checkpoints/best_model.pt")
