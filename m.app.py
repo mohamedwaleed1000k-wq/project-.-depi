@@ -6,14 +6,8 @@ import numpy as np
 import torch
 import wfdb
 import matplotlib.pyplot as plt
-
-# --- استيراد الملفات الخاصة بك ---
-try:
-    from model import build_model
-    import data_pipeline as dp
-except ImportError as e:
-    st.error(f"خطأ في استيراد الملفات: {e}")
-    st.stop()
+from model import build_model
+import data_pipeline as dp
 
 st.set_page_config(page_title="ECG Diagnosis", page_icon="❤️", layout="wide")
 
@@ -26,13 +20,15 @@ st.title("❤️ ECG Diagnosis using Deep Learning")
 def load_model():
     checkpoint_path = "checkpoints/best_model.pt"
     if not os.path.exists(checkpoint_path):
+        st.error(f"ملف النموذج غير موجود في: {checkpoint_path}")
         return None, None
 
+    # تحميل النموذج
     checkpoint = torch.load(checkpoint_path, map_location="cpu")
-    model = build_model(
-        n_classes=len(checkpoint["class_names"]),
-        variant="resnet18"
-    )
+    
+    # بناء النموذج باستخدام الدالة التي أضفناها
+    model = build_model(n_classes=len(checkpoint["class_names"]))
+
     model.load_state_dict(checkpoint["model_state"])
     model.eval()
     return model, checkpoint["class_names"]
@@ -40,7 +36,6 @@ def load_model():
 model, class_names = load_model()
 
 if model is None:
-    st.error("لم يتم العثور على ملف النموذج في checkpoints/best_model.pt")
     st.stop()
 
 st.success("✅ Model Loaded Successfully")
@@ -61,23 +56,33 @@ if uploaded_files:
     if hea_file:
         record_name = os.path.splitext(hea_file)[0]
         record_path = os.path.join(temp_dir, record_name)
+        
         try:
             sig, fields = wfdb.rdsamp(record_path)
             
-            # معالجة
+            # معالجة الإشارة
             sig = dp.clean_single_signal(sig)
             sig = dp.bandpass_filter_single(sig)
             sig = dp.normalize_single_signal(sig)
             
+            # تحويل الإشارة لـ Tensor (تأكد من مطابقة الأبعاد لما يتوقعه ResNet1D)
             x = torch.tensor(np.transpose(sig, (1, 0)), dtype=torch.float32).unsqueeze(0)
             
+            # التنبؤ
             with torch.no_grad():
-                probs = torch.sigmoid(model(x))[0].numpy()
+                logits = model(x)
+                probs = torch.sigmoid(logits)[0].numpy()
             
             pred = np.argmax(probs)
-            st.write(f"### النتيجة: {class_names[pred]}")
+            st.header("النتيجة:")
+            st.write(f"### النوع المتوقع: {class_names[pred]}")
             
+            # عرض الاحتمالات
+            for c, p in zip(class_names, probs):
+                st.write(f"{c}: {p*100:.2f}%")
+                st.progress(float(p))
+
         except Exception as e:
-            st.error(f"حدث خطأ أثناء المعالجة: {e}")
+            st.error(f"خطأ أثناء المعالجة: {e}")
     
     shutil.rmtree(temp_dir)
