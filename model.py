@@ -31,15 +31,13 @@ class ResNet1D(nn.Module):
         self.stage3 = self._make_stage(ch*2, ch*4, layers[2], 2, kernel_size, dropout)
         self.stage4 = self._make_stage(ch*4, ch*8, layers[3], 2, kernel_size, dropout)
         
-        # FIXED: تم تعديل طبقة الـ head لتعمل بشكل سليم
-        # الـ ch*8 يمثل حجم المعالم بعد الـ stage4
         self.head = nn.Sequential(
             nn.AdaptiveAvgPool1d(1), 
             nn.Flatten(), 
             nn.Dropout(p=dropout),
-            nn.Linear(ch*8, 256), # طبقة وسيطة لزيادة التعقيد
+            nn.Linear(ch*8, 256),
             nn.ReLU(),
-            nn.Linear(256, n_classes) # طبقة الإخراج النهائية
+            nn.Linear(256, n_classes)
         )
         
     def _make_stage(self, in_ch, out_ch, n_blocks, stride, ks, dp):
@@ -48,13 +46,15 @@ class ResNet1D(nn.Module):
         return nn.Sequential(*blocks)
         
     def forward(self, x):
-        # المرور عبر الشبكة الأساسية (backbone)
         features = self.stem(x)
         features = self.stage1(features)
         features = self.stage2(features)
         features = self.stage3(features)
         features = self.stage4(features)
-        
-        # FIXED: المرور الصحيح عبر الـ head الجديد
         output = self.head(features)
         return output
+
+# --- الدالة المطلوبة للـ Import ---
+def build_model(n_classes, variant="resnet18"):
+    # قمنا بتعريف النموذج هنا ليعمل مع ملف m.app.py
+    return ResNet1D(n_leads=12, n_classes=n_classes)
