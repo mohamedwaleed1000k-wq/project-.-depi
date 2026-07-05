@@ -1,12 +1,5 @@
 streamlit
-pandas
-numpy
-matplotlib
-wfdb
-scikit-learn
-Pillow
-fpdf2
 torch
-torchvision
-scipy
-requests
+numpy
+wfdb
+matplotlib
