@@ -24,7 +24,12 @@ class ResBlock1D(nn.Module):
 class ResNet1D(nn.Module):
     def __init__(self, n_leads=12, n_classes=5, base_ch=64, layers=[2,2,2,2], kernel_size=7, dropout=0.2):
         super().__init__()
-        self.stem = nn.Sequential(nn.Conv1d(n_leads, base_ch, kernel_size=15, stride=2, padding=7, bias=False), nn.BatchNorm1d(base_ch), nn.ReLU(inplace=True), nn.MaxPool1d(kernel_size=3, stride=2, padding=1))
+        self.stem = nn.Sequential(
+            nn.Conv1d(n_leads, base_ch, kernel_size=15, stride=2, padding=7, bias=False), 
+            nn.BatchNorm1d(base_ch), 
+            nn.ReLU(inplace=True), 
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
+        )
         ch = base_ch
         self.stage1 = self._make_stage(ch, ch, layers[0], 1, kernel_size, dropout)
         self.stage2 = self._make_stage(ch, ch*2, layers[1], 2, kernel_size, dropout)
@@ -35,9 +40,9 @@ class ResNet1D(nn.Module):
             nn.AdaptiveAvgPool1d(1), 
             nn.Flatten(), 
             nn.Dropout(p=dropout),
-            nn.Linear(ch*8, 256),
+            nn.Linear(ch*8, 256), 
             nn.ReLU(),
-            nn.Linear(256, n_classes)
+            nn.Linear(256, n_classes) 
         )
         
     def _make_stage(self, in_ch, out_ch, n_blocks, stride, ks, dp):
@@ -54,7 +59,7 @@ class ResNet1D(nn.Module):
         output = self.head(features)
         return output
 
-# --- الدالة المطلوبة للـ Import ---
+# --- الدالة المفقودة التي كانت تسبب خطأ ImportError ---
 def build_model(n_classes, variant="resnet18"):
-    # قمنا بتعريف النموذج هنا ليعمل مع ملف m.app.py
+    # يتم إنشاء النموذج هنا ليعمل مع التطبيق
     return ResNet1D(n_leads=12, n_classes=n_classes)
