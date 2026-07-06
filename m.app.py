@@ -20,20 +20,26 @@ st.set_page_config(page_title="ECG Analysis", layout="wide")
 # --- الشريط الجانبي (التاريخ والوقت) ---
 with st.sidebar:
     st.header("🕒 معلومات النظام")
-    
-    # الحصول على التاريخ والوقت الحالي
     now = datetime.now()
-    date_str = now.strftime("%Y-%m-%d")
-    time_str = now.strftime("%H:%M:%S")
-    
-    st.metric("التاريخ", date_str)
-    st.metric("الوقت", time_str)
-    
+    st.metric("التاريخ", now.strftime("%Y-%m-%d"))
+    st.metric("الوقت", now.strftime("%H:%M:%S"))
     st.divider()
     st.info("نظام تحليل الإشارات القلبية")
-    st.caption("جامعة حورس - هندسة الميكاترونيات")
 
+# --- المحتوى الرئيسي ---
 st.title("تحليل رسم القلب (ECG)")
+
+# --- حقول إدخال بيانات المريض ---
+st.subheader("📋 بيانات المريض")
+col1, col2, col3 = st.columns(3)
+with col1:
+    patient_name = st.text_input("اسم المريض")
+with col2:
+    patient_age = st.number_input("السن (العمر)", min_value=0, max_value=120)
+with col3:
+    patient_gender = st.selectbox("الجنس", ["ذكر", "أنثى"])
+
+st.divider()
 
 # --- تشغيل الموديل ---
 @st.cache_resource
@@ -55,6 +61,10 @@ model = load_model()
 uploaded_file = st.file_uploader("ارفع ملف الإشارة", type=['csv', 'png', 'jpg'])
 
 if uploaded_file is not None:
-    st.write("✅ تم رفع الملف بنجاح.")
+    if patient_name:
+        st.write(f"✅ تم استقبال ملف المريض: **{patient_name}**")
+        st.write("جاري التحليل...")
+    else:
+        st.warning("⚠️ يرجى إدخال اسم المريض قبل البدء.")
 else:
-    st.info("ℹ️ يرجى رفع ملف ECG للبدء.")
+    st.info("ℹ️ يرجى إدخال بيانات المريض ورفع ملف الإشارة للبدء.")
