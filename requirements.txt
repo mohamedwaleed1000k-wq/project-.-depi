@@ -1,11 +1,9 @@
 streamlit
-pandas
-numpy
-matplotlib
-wfdb
-scikit-learn
-Pillow
-fpdf2
 torch
 torchvision
+numpy
+pandas
+wfdb
+matplotlib
+scikit-learn
 scipy
