@@ -1,53 +1,33 @@
-import os
-import tempfile
 import streamlit as st
-import wfdb
-import matplotlib.pyplot as plt
-import numpy as np
+import torch
+import os
 
-# --- الخدعة عشان ميكسرش ---
-def build_model(n_classes, variant="resnet18"):
-    return None # دالة وهمية
+# تعريف الموديل من الملف المجاور
+from model import ResNet1D
 
-# استبدال الـ imports اللي بتعمل مشاكل
-# import data_pipeline as dp 
-# from model import build_model 
+st.set_page_config(page_title="ECG Analysis", layout="centered")
+st.title("تحليل رسم القلب (ECG)")
 
-st.set_page_config(page_title="ECG Diagnosis", page_icon="❤️", layout="wide")
-st.title("❤️ ECG Diagnosis using Deep Learning")
-
-# --- محاكاة تحميل الموديل عشان اللجنة ---
+# دالة لتحميل الموديل من المجلد المطلوب
 @st.cache_resource
 def load_model():
-    return "Ready", ["Normal", "Arrhythmia", "Other", "PVC", "PAC"]
+    # المسار المطلوب: checkpoints/best_model.pt
+    model_path = os.path.join('checkpoints', 'best_model.pt')
+    
+    if not os.path.exists(model_path):
+        return None
+        
+    model = ResNet1D(n_leads=12, n_classes=5)
+    
+    # تحميل الأوزان
+    # استخدام weights_only=False هو الخيار الأفضل لتفادي مشاكل الإصدارات الجديدة
+    model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=False))
+    model.eval()
+    return model
 
-model, class_names = load_model()
-st.success("✅ Model Loaded Successfully")
+model = load_model()
 
-# --- الرفع ---
-uploaded_files = st.file_uploader(
-    "Upload ECG Files (.hea + .dat)",
-    type=["hea", "dat"],
-    accept_multiple_files=True
-)
-
-if uploaded_files:
-    temp_dir = tempfile.mkdtemp()
-    for file in uploaded_files:
-        with open(os.path.join(temp_dir, file.name), "wb") as f:
-            f.write(file.getbuffer())
-
-    hea_file = next((f.name for f in uploaded_files if f.name.endswith(".hea")), None)
-
-    if hea_file is None:
-        st.error("Please upload .hea file")
-    else:
-        st.write(f"### Analyzing: {hea_file}")
-        with st.spinner('جاري معالجة الإشارة...'):
-            import time
-            time.sleep(2)
-            st.success("✅ تم التحليل بنجاح")
-            
-            # عرض النتيجة عشان اللجنة
-            st.metric("التشخيص", "Normal Sinus Rhythm")
-            st.info("البيانات المستخرجة: مطابقة للمعايير السريرية.")
+if model:
+    st.success("✅ الموديل جاهز للعمل!")
+else:
+    st.warning("⚠️ بانتظار رفع ملف الموديل في المسار: checkpoints/best_model.pt")
