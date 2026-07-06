@@ -1,73 +1,39 @@
-import os
-import tempfile
-import shutil
-import numpy as np
 import streamlit as st
-import torch
-import wfdb
-import matplotlib.pyplot as plt
+import tempfile
+import os
 
-import data_pipeline as dp
-from model import build_model
-
+# إعداد الصفحة
 st.set_page_config(page_title="ECG Diagnosis", page_icon="❤️", layout="wide")
 
-st.title("❤️ ECG Diagnosis using Deep Learning")
+st.title("❤️ ECG Diagnosis System")
+st.info("ℹ️ النظام يعمل حالياً كواجهة استقبال ملفات (التحليل قيد الصيانة).")
 
 # ==========================
-# Load Model
+# Upload Section
 # ==========================
-
-@st.cache_resource
-def load_model():
-    checkpoint_path = "checkpoints/best_model.pt"
-    if not os.path.exists(checkpoint_path):
-        return None, None
-
-    checkpoint = torch.load(checkpoint_path, map_location="cpu")
-
-    model = build_model(
-        n_classes=len(checkpoint["class_names"]),
-        variant="resnet18"
-    )
-
-    model.load_state_dict(checkpoint["model_state"])
-    model.eval()
-    return model, checkpoint["class_names"]
-
-model, class_names = load_model()
-
-if model is None:
-    st.error("Model not found.")
-    st.stop()
-
-st.success("✅ Model Loaded Successfully")
-
-# ==========================
-# Upload
-# ==========================
-
 uploaded_files = st.file_uploader(
-    "Upload ECG Files (.hea + .dat)",
+    "ارفع ملفات رسم القلب (.hea + .dat)",
     type=["hea", "dat"],
     accept_multiple_files=True
 )
 
 if uploaded_files:
+    # إنشاء مجلد مؤقت لحفظ الملفات
     temp_dir = tempfile.mkdtemp()
+    
     for file in uploaded_files:
         with open(os.path.join(temp_dir, file.name), "wb") as f:
             f.write(file.getbuffer())
+    
+    st.success(f"✅ تم استقبال {len(uploaded_files)} ملف بنجاح في المسار المؤقت.")
+    
+    # التأكد من وجود ملف .hea
+    hea_files = [f.name for f in uploaded_files if f.name.endswith(".hea")]
+    
+    if hea_files:
+        st.write("ملف الإشارة المكتشف:", hea_files[0])
+    else:
+        st.warning("⚠️ يرجى التأكد من رفع ملف .hea بجانب ملف .dat")
 
-    hea_file = None
-    for file in uploaded_files:
-        if file.name.endswith(".hea"):
-            hea_file = file.name
-            break
-
-    if hea_file is None:
-        st.error("Please upload .hea file")
-        st.stop()
-
-    record_name = os.path.splitext(hea_file)[0]
-    record_path = os.path.join(temp_dir, record_name)
+else:
+    st.write("يرجى اختيار الملفات للبدء.")
