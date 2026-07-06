@@ -2,12 +2,12 @@ import streamlit as st
 import torch
 import torch.nn as nn
 import os
+from datetime import datetime
 
-# --- تعريف الموديل مباشرة هنا عشان نتفادى خطأ الـ Import ---
+# --- تعريف الموديل ---
 class ResNet1D(nn.Module):
     def __init__(self, n_leads, n_classes):
         super(ResNet1D, self).__init__()
-        # تعريف بسيط للموديل عشان ميبقاش فاضي
         self.conv1 = nn.Conv1d(n_leads, 64, kernel_size=3)
         self.fc = nn.Linear(64, n_classes)
         
@@ -17,11 +17,21 @@ class ResNet1D(nn.Module):
 # --- إعداد الصفحة ---
 st.set_page_config(page_title="ECG Analysis", layout="wide")
 
+# --- الشريط الجانبي (التاريخ والوقت) ---
 with st.sidebar:
-    st.header("📋 تفاصيل المشروع")
-    st.success("مشروع التخرج: نظام ذكي لتحليل إشارات القلب")
-    st.write("• **محمد وليد محمد أحمد**")
-    st.write("• **محمد جمال الدين يوسف**")
+    st.header("🕒 معلومات النظام")
+    
+    # الحصول على التاريخ والوقت الحالي
+    now = datetime.now()
+    date_str = now.strftime("%Y-%m-%d")
+    time_str = now.strftime("%H:%M:%S")
+    
+    st.metric("التاريخ", date_str)
+    st.metric("الوقت", time_str)
+    
+    st.divider()
+    st.info("نظام تحليل الإشارات القلبية")
+    st.caption("جامعة حورس - هندسة الميكاترونيات")
 
 st.title("تحليل رسم القلب (ECG)")
 
@@ -33,7 +43,6 @@ def load_model():
         return None
     try:
         model = ResNet1D(n_leads=12, n_classes=5)
-        # تحميل الأوزان
         model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=False))
         model.eval()
         return model
@@ -42,8 +51,9 @@ def load_model():
 
 model = load_model()
 
-# --- عرض النتيجة ---
+# --- واجهة الرفع ---
 uploaded_file = st.file_uploader("ارفع ملف الإشارة", type=['csv', 'png', 'jpg'])
+
 if uploaded_file is not None:
     st.write("✅ تم رفع الملف بنجاح.")
 else:
