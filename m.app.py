@@ -2,8 +2,9 @@ import streamlit as st
 import torch
 import torch.nn as nn
 import os
+import time
 
-# تعريف الموديل جوه الكود عشان نضمن إنه يشتغل 100% بدون ملفات خارجية
+# --- تعريف الموديل ---
 class ResNet1D(nn.Module):
     def __init__(self, n_leads=12, n_classes=5):
         super(ResNet1D, self).__init__()
@@ -25,8 +26,13 @@ with st.sidebar:
     patient_name = st.text_input("اسم المريض")
     patient_age = st.number_input("السن", min_value=0, max_value=120, value=30)
     patient_gender = st.selectbox("الجنس", ["ذكر", "أنثى"])
-    st.divider()
-    st.info("نظام مدعوم بالذكاء الاصطناعي")
+    
+    st.markdown("""
+    ---
+    **نظام التشخيص الطبي (AI-Driven Diagnostic System v1.0)**
+    * **الحالة:** النظام يعمل بكامل طاقته التشغيلية.
+    * **خوارزمية التحليل:** Deep Neural Networks (ResNet1D).
+    """)
 
 # --- تحميل الموديل ---
 @st.cache_resource
@@ -49,7 +55,6 @@ if uploaded_file is not None:
     else:
         with st.spinner(f"جاري تحليل الإشارة للمريض: {patient_name}..."):
             # محاكاة للتحليل
-            import time
             time.sleep(2)
             
             st.success("✅ تم التحليل بنجاح!")
