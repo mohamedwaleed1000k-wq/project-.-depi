@@ -20,19 +20,12 @@ class ResNet1D(nn.Module):
 st.set_page_config(page_title="ECG Analysis System", layout="wide")
 st.title("❤️ نظام تشخيص أمراض القلب (ECG Analysis)")
 
-# --- الشريط الجانبي لإدخال بيانات المريض ---
+# --- الشريط الجانبي (تم حذف كل الكلام اللي تحت) ---
 with st.sidebar:
     st.header("👤 بيانات المريض")
     patient_name = st.text_input("اسم المريض")
     patient_age = st.number_input("السن", min_value=0, max_value=120, value=30)
     patient_gender = st.selectbox("الجنس", ["ذكر", "أنثى"])
-    
-    st.markdown("""
-    ---
-    **نظام التشخيص الطبي (AI-Driven Diagnostic System v1.0)**
-    * **الحالة:** النظام يعمل بكامل طاقته التشغيلية.
-    * **خوارزمية التحليل:** Deep Neural Networks (ResNet1D).
-    """)
 
 # --- تحميل الموديل ---
 @st.cache_resource
